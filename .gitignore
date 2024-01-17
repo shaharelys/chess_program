@@ -1,0 +1,26 @@
+# Ignore virtual environment directory
+/venv
+
+# Ignore IDE-specific directory (PyCharm)
+/.idea
+
+# Ignore Python byte code files
+__pycache__/
+
+# Ignore any compiled Python files (e.g., .pyc)
+*.pyc
+
+# Ignore any generated files or directories (e.g., build/ or dist/)
+build/
+dist/
+
+# Exclude any environment-specific files (e.g., .env)
+.env
+
+# Ignore any user-specific configuration files (e.g., .idea/workspace.xml)
+*.iml
+.idea/workspace.xml
+
+# Add other project-specific files or directories to ignore if needed
+# For example, if you have a 'config.ini' file, you can add it like this:
+# config.ini
