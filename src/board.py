@@ -3,11 +3,13 @@ from config import *
 from move import *
 from square import Square
 from chess_piece import *
+from control_map import ControlMap
 
 
 class Board:
     def __init__(self):
         self.board = BoardSetup().board
+        self.threats_map = ControlMap(self)
 
     def get_square(self, row, col):
         return self.board[row][col]
@@ -26,14 +28,14 @@ class BoardSetup:
     @staticmethod
     def create_blank_board() -> list[list[Square]]:
         # Implement logic to create a blank board
-        board = [[Square() for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        board = [[Square((i, j)) for j in range(BOARD_SIZE)] for i in range(BOARD_SIZE)]
         return board
 
     def place_single_piece(self, piece_type: PieceType, color: Color, position: tuple[int, int]):
         # Implement logic to place a single piece on the board
         square = self.board[position[0]][position[1]]  # a reference to the corresponding square
-        piece = ChessPieceFactory.create(piece_type, color)
-        square.set_piece(piece)
+        piece = ChessPieceFactory.create(piece_type, color, position)
+        square.operator.set_piece(piece)
 
     def place_pawns(self):
         for i in range(BOARD_SIZE):
@@ -65,3 +67,4 @@ class BoardSetup:
     def place_kings(self):
         self.place_single_piece(PieceType.KING, Color.WHITE, (0, 4))
         self.place_single_piece(PieceType.KING, Color.BLACK, (7, 4))
+

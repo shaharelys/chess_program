@@ -1,6 +1,7 @@
 # chess_piece.py
 from abc import ABC, abstractmethod
 from config import *
+from square import Square
 
 
 class ChessPiece(ABC):
@@ -8,6 +9,7 @@ class ChessPiece(ABC):
         self.piece_type = piece_type
         self.color = color
         self.position = position
+        self.controlled_squares: set[Square] = set()
 
     @abstractmethod
     def potential_steps(self) -> set[tuple[int, int]]:
@@ -22,40 +24,51 @@ class ChessPiece(ABC):
         """
         Generates all potential captures for a piece of that type.
         A capture coordinates represents the delta in position of which it might capture at.
-        By default, we assume captures are the same as steps for most pieces (Pawn overrides this)
+        """
+        pass
+
+    @abstractmethod
+    def update_controlled_squares(self) -> None:
+        """
+        Updates the set of squares controlled by this piece.
         """
         pass
 
 
 class Pawn(ChessPiece):
+
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.PAWN, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        steps = set()
+
         if self.color == Color.WHITE:
-            steps.add((1, 0))
+            steps = HypotheticalPositionDeltas.PAWN_WHITE_STEP
 
             if self.position[0] == 1:
-                steps.add((2, 0))
+                steps = HypotheticalPositionDeltas.PAWN_WHITE_START_STEPS
         else:
-            steps.add((-1, 0))
+            steps = HypotheticalPositionDeltas.PAWN_BLACK_STEP
 
             if self.position[0] == 6:
-                steps.add((-2, 0))
+                steps = HypotheticalPositionDeltas.PAWN_BLACK_START_STEPS
 
-        return steps
+        return steps.value
 
     def potential_captures(self) -> set[tuple[int, int]]:
         if self.color == Color.WHITE:
-            captures = {(1, 1), (1, -1)}
+            captures = HypotheticalPositionDeltas.PAWN_WHITE_CAPTURE
 
         else:
-            captures = {(-1, 1), (-1, -1)}
+            captures = HypotheticalPositionDeltas.PAWN_BLACK_CAPTURE
 
-        return captures
+        return captures.value
 
 
 class MajorChessPiece(ChessPiece):
     """
     A class to represent a major chess piece (Knight, Bishop, Rook, Queen, King)
+    By default, we assume captures are the same as steps for most pieces (Pawn is an exception)
     """
     @abstractmethod
     def potential_steps(self) -> set[tuple[int, int]]:
@@ -66,44 +79,59 @@ class MajorChessPiece(ChessPiece):
 
 
 class Knight(MajorChessPiece):
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.KNIGHT, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        return PieceMoves.KNIGHT
+        return HypotheticalPositionDeltas.KNIGHT.value
 
 
 class Bishop(MajorChessPiece):
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.BISHOP, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        return PieceMoves.BISHOP
+        return HypotheticalPositionDeltas.BISHOP.value
 
 
 class Rook(MajorChessPiece):
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.ROOK, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        return PieceMoves.ROOK
+        return HypotheticalPositionDeltas.ROOK.value
 
 
 class Queen(MajorChessPiece):
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.QUEEN, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        return PieceMoves.QUEEN
+        return HypotheticalPositionDeltas.QUEEN.value
 
 
 class King(MajorChessPiece):
+    def __init__(self, color: Color, position: tuple[int, int]):
+        super().__init__(piece_type=PieceType.KING, color=color, position=position)
+
     def potential_steps(self) -> set[tuple[int, int]]:
-        return PieceMoves.KING
+        return HypotheticalPositionDeltas.KING.value
 
 
 class ChessPieceFactory:
     @staticmethod
-    def create(piece_type: PieceType, color: Color, position: tuple[int, int]):
+    def create(piece_type: PieceType, color: Color, position: tuple[int, int]) -> ChessPiece:
         if piece_type == PieceType.PAWN:
-            return Pawn(piece_type, color, position)
+            return Pawn(color, position)
         elif piece_type == PieceType.KNIGHT:
-            return Knight(piece_type, color, position)
+            return Knight(color, position)
         elif piece_type == PieceType.BISHOP:
-            return Bishop(piece_type, color, position)
+            return Bishop(color, position)
         elif piece_type == PieceType.ROOK:
-            return Rook(piece_type, color, position)
+            return Rook(color, position)
         elif piece_type == PieceType.QUEEN:
-            return Queen(piece_type, color, position)
+            return Queen(color, position)
         elif piece_type == PieceType.KING:
-            return King(piece_type, color, position)
+            return King(color, position)
         else:
             raise ValueError("Invalid piece type")

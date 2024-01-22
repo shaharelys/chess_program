@@ -1,49 +1,50 @@
 # square.py
 from config import *
 from chess_piece import ChessPiece
+from typing import Optional
 
 
 class Square:
-    def __init__(self):
-        self.occupied_by = None  # This can hold a reference to the piece occupying the square, if any
-        self.threatened_by_white = set()  # Set of pieces (references) threatening this square
-        self.threatened_by_black = set()  # Similarly, for black pieces
+    def __init__(self, position: tuple[int, int]):
+        self.occupant: Optional[ChessPiece] = None
+        self.position = position
+        self.square_color = self.get_square_color()
+        self.controlled_by: set[ChessPiece] = set()
+        self.operator = Operator(self)
 
-    def set_piece(self, material: ChessPiece):
+    def get_square_color(self) -> Color:
+        """
+        Returns the color of the board square.
+        """
+        row, col = self.position
+        return Color.BLACK if (row + col) % 2 == 0 else Color.WHITE
+
+    def is_white_occupied(self) -> bool:
+        """
+        Returns true if the square is occupied by a white piece.
+        """
+        return self.occupant is not None and self.occupant.color == Color.WHITE
+
+    def is_black_occupied(self) -> bool:
+        """
+        Returns true if the square is occupied by a black piece.
+        """
+        return self.occupant is not None and self.occupant.color == Color.BLACK
+
+
+class Operator:
+    def __init__(self, square: Square):
+        self.square = square
+
+    def set_piece(self, piece: ChessPiece):
         """
         Place a piece on this square.
         """
-        self.occupied_by = material
+        self.square.occupant = piece
 
     def remove_piece(self):
         """
         Remove any piece occupying this square.
         """
-        self.occupied_by = None
+        self.square.occupant = None
 
-    def add_threat(self, piece):
-        """
-        Add a piece to the set of pieces threatening this square.
-        """
-        if piece.color == Color.WHITE:
-            self.threatened_by_white.add(piece)
-        else:
-            self.threatened_by_black.add(piece)
-
-    def remove_threat(self, piece):
-        """
-        Remove a piece from the set of pieces threatening this square.
-        """
-        if piece.color == Color.WHITE:
-            self.threatened_by_white.discard(piece)
-        else:
-            self.threatened_by_black.discard(piece)
-
-    def is_under_threat(self, color: Color) -> bool:
-        """
-        Check if the square is under threat from the specified color.
-        """
-        if color == Color.WHITE:
-            return len(self.threatened_by_white) > 0
-        else:
-            return len(self.threatened_by_black) > 0
