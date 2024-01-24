@@ -1,10 +1,10 @@
 # control_map.py
 from config import *
-from board import Board
 from square import Square
 from chess_piece import ChessPiece
 from typing import Optional
 from move import Move
+
 
 class ControlMap:
     """
@@ -13,8 +13,7 @@ class ControlMap:
     ChessPiece.controlled_squares : set[Square]
     BoardLines.rows / .columns / .diagonal_up_right / .diagonal_down_right : dict[int, set[ChessPiece]]
     """
-    def __init__(self, board: Board):
-        self.board = board
+    def __init__(self):
         self.lines = BoardLines()
 
     def handle_move(self, move: Move) -> None:

@@ -12,12 +12,39 @@ class Color(Enum):
 
 
 class PieceType(Enum):
-    PAWN = 0
-    KNIGHT = 1
-    BISHOP = 2
-    ROOK = 3
-    QUEEN = 4
-    KING = 5
+    PAWN = ('P', 0)
+    KNIGHT = ('N', 1)
+    BISHOP = ('B', 2)
+    ROOK = ('R', 3)
+    QUEEN = ('Q', 4)
+    KING = ('K', 5)
+
+    def __init__(self, symbol, order):
+        self.symbol = symbol
+        self.order = order
+
+
+class InitPiece(Enum):
+    """
+    Enum representing the initial information of a chess piece
+    """
+    PAWN_WHITE = PieceType.PAWN, Color.WHITE, [(1, i) for i in range(BOARD_SIZE)]
+    PAWN_BLACK = PieceType.PAWN, Color.BLACK, [(6, i) for i in range(BOARD_SIZE)]
+    KNIGHT_WHITE = PieceType.KNIGHT, Color.WHITE, [(0, 1), (0, 6)]
+    KNIGHT_BLACK = PieceType.KNIGHT, Color.BLACK, [(7, 1), (7, 6)]
+    BISHOP_WHITE = PieceType.BISHOP, Color.WHITE, [(0, 2), (0, 5)]
+    BISHOP_BLACK = PieceType.BISHOP, Color.BLACK, [(7, 2), (7, 5)]
+    ROOK_WHITE = PieceType.ROOK, Color.WHITE, [(0, 0), (0, 7)]
+    ROOK_BLACK = PieceType.ROOK, Color.BLACK, [(7, 0), (7, 7)]
+    QUEEN_WHITE = PieceType.QUEEN, Color.WHITE, [(0, 3)]
+    QUEEN_BLACK = PieceType.QUEEN, Color.BLACK, [(7, 3)]
+    KING_WHITE = PieceType.KING, Color.WHITE, [(0, 4)]
+    KING_BLACK = PieceType.KING, Color.BLACK, [(7, 4)]
+
+    def __init__(self, piece_type, color, positions):
+        self.piece_type = piece_type
+        self.positions = positions
+        self.color = color
 
 
 class MoveScope(Enum):

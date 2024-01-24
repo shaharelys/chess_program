@@ -1,15 +1,15 @@
 # move.py
+from __future__ import annotations
 from config import *
-from square import Square
 from chess_piece import ChessPiece
 
 
 class Move:
     # a data class to hold a move
-    def __init__(self, piece: ChessPiece, move_type: MoveType, initial_square: Square, final_square: Square):
+    def __init__(self, piece: ChessPiece, move_scope: MoveScope, initial_square: 'Square', final_square: 'Square'):
         self.valid = False
         self.piece = piece
-        self.move_type = move_type
+        self.move_type = move_scope
         self.square_initial = initial_square
         self.square_final = final_square
 

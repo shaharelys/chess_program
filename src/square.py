@@ -1,15 +1,15 @@
 # square.py
+from __future__ import annotations
 from config import *
-from chess_piece import ChessPiece
 from typing import Optional
 
 
 class Square:
     def __init__(self, position: tuple[int, int]):
-        self.occupant: Optional[ChessPiece] = None
+        self.occupant: Optional['ChessPiece'] = None
         self.position = position
-        self.square_color = self.get_square_color()
-        self.controlled_by: set[ChessPiece] = set()
+        self.color = self.get_square_color()
+        self.controlled_by: set['ChessPiece'] = set()
         self.operator = Operator(self)
 
     def get_square_color(self) -> Color:
@@ -36,7 +36,7 @@ class Operator:
     def __init__(self, square: Square):
         self.square = square
 
-    def set_piece(self, piece: ChessPiece):
+    def set_piece(self, piece: 'ChessPiece'):
         """
         Place a piece on this square.
         """
