@@ -11,6 +11,10 @@ class ChessGUI:
         self.create_chess_board()
         self.update_board()  # Initial update to display the starting board
 
+    # Inside your ChessGUI initialization or a separate method
+    def test_1(self, test_row: int, test_col: int):
+        self.choose_piece(test_row, test_col)  # Replace test_row and test_col with specific coordinates
+
     def create_chess_board(self):
         self.board_frame = tk.Frame(self.root)
         self.board_frame.pack()
@@ -45,6 +49,17 @@ class ChessGUI:
                 return '♟'
         return piece.piece_type.symbol
 
+    def choose_piece(self, row: int, col: int):
+        chess_piece = self.board_manager.get_square(row, col).occupant
+        if chess_piece:
+            squares_to_highlight = list(chess_piece.controlled_squares)
+            for square in squares_to_highlight:
+                self.highlight_square(square.position, 'light blue')
+
+    def highlight_square(self, position: tuple[int, int], color: str):
+        i, j = position
+        self.labels[i][j].config(bg=color)
+
 
 # Running the GUI
 if __name__ == "__main__":
@@ -53,4 +68,9 @@ if __name__ == "__main__":
 
     game_board = BoardManager()
     app = ChessGUI(root, game_board)
+
+    # test
+    position = InitPiece.PAWN_WHITE.positions[0]
+    app.test_1(position[0], position[1])
+
     root.mainloop()

@@ -1,5 +1,4 @@
 # config.py
-
 from enum import Enum
 
 BOARD_SIZE = 8
@@ -49,46 +48,62 @@ class InitPiece(Enum):
 
 class MoveScope(Enum):
     """
-    Enum representing different scopes of a single chess move.
+    Enum representing different scopes of a single chess move, and allowed transitions between them.
     """
-    HYPOTHETICAL_MOVE = 0
+
+    INVALID = -1, {None}  # sink state
+    """
+    Invalid Move: Represents moves that are not allowed in the game of chess.
+    """
+
+    HYPOTHETICAL = 0, {1, -1}  # BOARD_CONSTRAINED, INVALID
     """
     Hypothetical Move: Represents all conceivable moves a piece can make, 
     regardless of the rules of the game or the board's current state.
     """
 
-    BOARD_CONSTRAINED_MOVE = 1
+    BOARD_CONSTRAINED = 1, {2, -1}  # UNOBSTRUCTED, INVALID
     """
     Board-Constrained Move: Filters Hypothetical Moves to only include those 
     that are within the boundaries of the chessboard.
     """
 
-    UNOBSTRUCTED_MOVE = 2
+    UNOBSTRUCTED = 2, {3, -1}  # LEGAL, INVALID
     """
     Unobstructed Move: Considers pieces that may block the path of a move. 
     Includes moves up to the first obstructing piece. This category represents 
     the moves that will be visually indicated on the game interface.
     """
 
-    ILLEGAL_MOVE = 3
-    """
-    Illegal Move: Includes Unobstructed Moves that reveal the king to a check or land on a friendly piece.
-    """
-
-    LEGAL_MOVE = 4
+    LEGAL = 3, {4, 5}  # STEP, CAPTURE
     """
     Legal Move: Includes Unobstructed Moves that don't reveal the king to a check and don't land on a friendly piece.
     """
 
-    STEP_MOVE = 5
+    STEP = 4, {None}  # sink state
     """
     Step Move: A subset of Legal Moves that involves moving a piece to an unoccupied square.
     """
 
-    CAPTURE_MOVE = 6
+    CAPTURE = 5, {None}  # sink state
     """
     Capture Move: A subset of Legal Moves that involves taking an opponent's piece.
     """
+
+    def __init__(self, order, allowed_transitions):
+        self.order = order
+        self.allowed_transitions = allowed_transitions
+
+
+class MoveLineType(Enum):
+    """
+    Enum representing different lines of a single chess move.
+    """
+    ROW = 0
+    COLUMN = 1
+    DIAGONAL_RIGHT_UP = 2
+    DIAGONAL_RIGHT_DOWN = 3
+    KNIGHT_MOVE = 4
 
 
 class HypotheticalPositionDeltas(Enum):
@@ -96,13 +111,13 @@ class HypotheticalPositionDeltas(Enum):
     Hypothetical Position Deltas: Represents all conceivable deltas in position a piece can make,
     regardless of the rules of the game or the board's current state.
     """
-    # Deltas for class Pawn
-    PAWN_WHITE_STEP = {(1, 0)}
-    PAWN_BLACK_STEP = {(-1, 0)}
-    PAWN_WHITE_START_STEPS = {(2, 0), (1, 0)}
-    PAWN_BLACK_START_STEPS = {(-2, 0), (-1, 0)}
-    PAWN_WHITE_CAPTURE = {(1, 1), (1, -1)}
-    PAWN_BLACK_CAPTURE = {(-1, 1), (-1, -1)}
+    # Deltas for class Pawn.
+    # Note that steps and captures are consolidated and handled in the under the MoveValidate class.
+    PAWN_WHITE = {(1, 0), (1, 1), (1, -1)}
+    PAWN_BLACK = {(-1, 0), (-1, 1), (-1, -1)}
+    PAWN_WHITE_START = {(2, 0), (1, 0), (1, 1), (1, -1)}
+    PAWN_BLACK_START = {(-2, 0), (-1, 0), (-1, 1), (-1, -1)}
+
 
     # Deltas for class MajorChessPiece (of which steps and captures are the same)
     KNIGHT = {(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)}

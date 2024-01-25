@@ -71,7 +71,7 @@ class BoardLines:
         self.diagonals_down_right[row + col].add(piece)
 
     def remove_piece(self, piece: ChessPiece) -> None:
-        row, col = piece.position
+        row, col = piece.square.position
         self.rows[row].discard(piece)  # Using discard to avoid KeyError if the piece is not in the set
         self.columns[col].discard(piece)
         self.diagonals_up_right[col - row].discard(piece)

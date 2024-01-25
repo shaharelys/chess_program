@@ -10,116 +10,96 @@ class ChessPiece(ABC):
         self.piece_type = piece_type
         self.color = color
         self.square = square
+        self.legal_moves: set['Move'] = set()
         self.controlled_squares: set[Square] = set()
-        self.move_manager = None  # todo: implement this
-
-    def position_delta_to_final_square(self, delta: tuple[int, int]) -> Square:
-        """
-        Returns the square that is delta away from the current square.
-        """
 
     @abstractmethod
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         """
-        Generates all potential steps for a piece of that type.
-        A step coordinates represents the delta in position of which it might step at.
-        """
-        pass
-
-    @abstractmethod
-    def potential_captures(self) -> set[tuple[int, int]]:
-        """
-        Generates all potential captures for a piece of that type.
-        A capture coordinates represents the delta in position of which it might capture at.
+        Generates all potential moves deltas for a piece of that type.
+        Coordinates represents the delta in position of which it might move to.
         """
         pass
 
-    def update_controlled_squares(self) -> None:
+    def _position_delta_to_final_position(self, delta: tuple[int, int]) -> tuple[int, int]:
         """
-        Updates the set of squares controlled by this piece.
+        Returns the position of the square that is delta away from the current square.
         """
-        pass
+        row, col = self.square.position
+        d_row, d_col = delta
+        row_f, col_f = row + d_row, col + d_col
+        return row_f, col_f
+
+    def _delta_set_to_final_position_set(self, deltas: set[tuple[int, int]]) -> set[tuple[int, int]]:
+        """
+        Returns the set of positions that are delta away from the current square.
+        """
+        return {self._position_delta_to_final_position(delta) for delta in deltas}
+
+    def get_hypothetical_moves_final_positions(self) -> set[tuple[int, int]]:
+        """
+        Returns the set of positions that this piece can step to.
+        """
+        return self._delta_set_to_final_position_set(self._hypothetical_move_deltas())
 
 
 class Pawn(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.PAWN, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
 
         if self.color == Color.WHITE:
-            steps = HypotheticalPositionDeltas.PAWN_WHITE_STEP
+            steps = HypotheticalPositionDeltas.PAWN_WHITE
 
             if self.square.position[0] == 1:
-                steps = HypotheticalPositionDeltas.PAWN_WHITE_START_STEPS
+                steps = HypotheticalPositionDeltas.PAWN_WHITE_START
         else:
-            steps = HypotheticalPositionDeltas.PAWN_BLACK_STEP
+            steps = HypotheticalPositionDeltas.PAWN_BLACK
 
             if self.square.position[0] == 6:
-                steps = HypotheticalPositionDeltas.PAWN_BLACK_START_STEPS
+                steps = HypotheticalPositionDeltas.PAWN_BLACK_START
 
         return steps.value
 
-    def potential_captures(self) -> set[tuple[int, int]]:
-        if self.color == Color.WHITE:
-            captures = HypotheticalPositionDeltas.PAWN_WHITE_CAPTURE
 
-        else:
-            captures = HypotheticalPositionDeltas.PAWN_BLACK_CAPTURE
-
-        return captures.value
-
-
-class MajorChessPiece(ChessPiece):
-    """
-    A class to represent a major chess piece (Knight, Bishop, Rook, Queen, King)
-    By default, we assume captures are the same as steps for most pieces (Pawn is an exception)
-    """
-    @abstractmethod
-    def potential_steps(self) -> set[tuple[int, int]]:
-        pass
-
-    def potential_captures(self) -> set[tuple[int, int]]:
-        return self.potential_steps()
-
-
-class Knight(MajorChessPiece):
+class Knight(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.KNIGHT, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.KNIGHT.value
 
 
-class Bishop(MajorChessPiece):
+class Bishop(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.BISHOP, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.BISHOP.value
 
 
-class Rook(MajorChessPiece):
+class Rook(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.ROOK, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.ROOK.value
 
 
-class Queen(MajorChessPiece):
+class Queen(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.QUEEN, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.QUEEN.value
 
 
-class King(MajorChessPiece):
+class King(ChessPiece):
     def __init__(self, color: Color, square: Square):
         super().__init__(piece_type=PieceType.KING, color=color, square=square)
 
-    def potential_steps(self) -> set[tuple[int, int]]:
+    def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.KING.value
 
 
