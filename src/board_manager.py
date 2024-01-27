@@ -12,32 +12,11 @@ class BoardManager:
         self.threats_map = ControlMap()
         self.move_factory = MoveFactory(self)
 
-    def get_square(self, row, col):
+    def get_square(self, row, col) -> Square:
         return self.board[row][col]
 
     def is_occupied(self, row, col):
         return self.get_square(row, col).occupant is not None
-
-    @staticmethod
-    def update_controlled_squares(piece: ChessPiece) -> None:
-        """
-        Updates the set of squares controlled by this piece.
-        """
-        pass
-
-    def update_legal_moves(self, piece: ChessPiece) -> None:
-        """
-        Updates the set of legal moves for this piece.
-        """
-        piece.legal_moves.clear()  # Clear current legal moves
-        hypothetical_moves_final_positions = piece.get_hypothetical_moves_final_positions()
-
-        for pose in hypothetical_moves_final_positions:
-            square_final = self.get_square(*pose)
-            move = self.move_factory.get_move(piece, square_final)
-
-            if move.scope in {MoveScope.STEP, MoveScope.CAPTURE}:
-                piece.legal_moves.add(move)
 
 
 class BoardSetup:

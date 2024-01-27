@@ -10,8 +10,14 @@ class ChessPiece(ABC):
         self.piece_type = piece_type
         self.color = color
         self.square = square
-        self.legal_moves: set['Move'] = set()
-        self.controlled_squares: set[Square] = set()
+        self.legal_moves: dict[MoveScope, set['Move']] = {MoveScope.STEP: set(), MoveScope.CAPTURE: set()}
+
+    @property
+    def controlled_squares(self) -> set[Square]:
+        """
+        Returns the set of squares that this piece controls.
+        """
+        return {move.square_final for move_scope_set in self.legal_moves.values() for move in move_scope_set}
 
     @abstractmethod
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:

@@ -19,18 +19,6 @@ class Square:
         row, col = self.position
         return Color.BLACK if (row + col) % 2 == 0 else Color.WHITE
 
-    def is_white_occupied(self) -> bool:
-        """
-        Returns true if the square is occupied by a white piece.
-        """
-        return self.occupant is not None and self.occupant.color == Color.WHITE
-
-    def is_black_occupied(self) -> bool:
-        """
-        Returns true if the square is occupied by a black piece.
-        """
-        return self.occupant is not None and self.occupant.color == Color.BLACK
-
 
 class Operator:
     def __init__(self, square: Square):
@@ -47,4 +35,3 @@ class Operator:
         Remove any piece occupying this square.
         """
         self.square.occupant = None
-

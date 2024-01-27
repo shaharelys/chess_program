@@ -51,48 +51,55 @@ class MoveScope(Enum):
     Enum representing different scopes of a single chess move, and allowed transitions between them.
     """
 
-    INVALID = -1, {None}  # sink state
+    INVALID = -1
     """
     Invalid Move: Represents moves that are not allowed in the game of chess.
     """
 
-    HYPOTHETICAL = 0, {1, -1}  # BOARD_CONSTRAINED, INVALID
+    HYPOTHETICAL = 0
     """
     Hypothetical Move: Represents all conceivable moves a piece can make, 
     regardless of the rules of the game or the board's current state.
     """
 
-    BOARD_CONSTRAINED = 1, {2, -1}  # UNOBSTRUCTED, INVALID
+    BOARD_CONSTRAINED = 1
     """
     Board-Constrained Move: Filters Hypothetical Moves to only include those 
     that are within the boundaries of the chessboard.
     """
 
-    UNOBSTRUCTED = 2, {3, -1}  # LEGAL, INVALID
+    UNOBSTRUCTED = 2
     """
     Unobstructed Move: Considers pieces that may block the path of a move. 
     Includes moves up to the first obstructing piece. This category represents 
     the moves that will be visually indicated on the game interface.
     """
 
-    LEGAL = 3, {4, 5}  # STEP, CAPTURE
+    LEGAL = 3
     """
     Legal Move: Includes Unobstructed Moves that don't reveal the king to a check and don't land on a friendly piece.
     """
 
-    STEP = 4, {None}  # sink state
+    STEP = 4
     """
     Step Move: A subset of Legal Moves that involves moving a piece to an unoccupied square.
     """
 
-    CAPTURE = 5, {None}  # sink state
+    CAPTURE = 5
     """
     Capture Move: A subset of Legal Moves that involves taking an opponent's piece.
     """
 
-    def __init__(self, order, allowed_transitions):
-        self.order = order
-        self.allowed_transitions = allowed_transitions
+
+ALLOWED_MOVE_SCOPE_TRANSITIONS = {
+    MoveScope.INVALID: {None},
+    MoveScope.HYPOTHETICAL: {MoveScope.BOARD_CONSTRAINED, MoveScope.INVALID},
+    MoveScope.BOARD_CONSTRAINED: {MoveScope.UNOBSTRUCTED, MoveScope.INVALID},
+    MoveScope.UNOBSTRUCTED: {MoveScope.LEGAL, MoveScope.INVALID},
+    MoveScope.LEGAL: {MoveScope.STEP, MoveScope.CAPTURE, MoveScope.INVALID},  # INVALID transition is only for pawns
+    MoveScope.STEP: {None},
+    MoveScope.CAPTURE: {None},
+}
 
 
 class MoveLineType(Enum):

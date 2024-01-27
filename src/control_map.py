@@ -25,14 +25,15 @@ class ControlMap:
         affected_pieces = self.get_affected_pieces(square_initial, square_final)
 
         for affected in affected_pieces:
-            self.update_controlled_squares(affected)
+            self.update_controlled_squares_old(affected)
 
     @staticmethod
-    def update_controlled_squares(piece: ChessPiece) -> None:
+    def update_controlled_squares_old(piece: ChessPiece) -> None:
         """
         Updates the controlled squares for the given piece and the corresponding squares'
         records of controlling pieces. It ensures these are in sync and updated.
         """
+        # TODO: See if this method is required
         old_controlled_squares = piece.controlled_squares.copy()
         piece.update_controlled_squares()
         for square in piece.controlled_squares:
