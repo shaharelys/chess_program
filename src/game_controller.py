@@ -7,8 +7,9 @@ from config import *
 
 
 class GameController:
-    def __init__(self, board_manager: BoardManager):
-        self.move_factory = MoveFactory(board_manager)
+    def __init__(self):
+        self.board_manager = BoardManager(self._initialize_piece_on_board_setup)  # callback
+        self.move_factory = MoveFactory(self.board_manager)
 
     def _update_legal_moves(self, piece: ChessPiece) -> None:
         """
@@ -41,8 +42,7 @@ class GameController:
         piece.square = square
         square.occupant = piece
 
-    def _initialize_piece(self, piece: ChessPiece, square: Square, caller: BoardSetup):
-        # TODO: solve the issue related to this method
+    def _initialize_piece_on_board_setup(self, piece: ChessPiece, square: Square, caller: BoardSetup):
         """
         On initialization by BoardSetup as callback, sets 'piece' on 'square' and updates its legal moves.
         """

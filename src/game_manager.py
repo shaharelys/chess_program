@@ -3,17 +3,14 @@
 Manages a single game logic, including move processing, game state maintenance, and enforcing rules.
 """
 from config import *
-from board_manager import BoardManager, BoardSetup
+from board_manager import BoardManager
 from game_controller import GameController
-from square import Square
-from chess_piece import ChessPiece
 from move import Move
 
 
 class GameManager:
     def __init__(self):
-        self.board_manager = BoardManager(GameController._initialize_piece)  # TODO: solve issue related to this method
-        self.controller = GameController(self.board_manager)
+        self.controller = GameController()
         self.history: list[Move] = []
         self.current_player = Color.WHITE
 
