@@ -1,10 +1,8 @@
 # move.py
-from __future__ import annotations
 from config import *
 import chess_piece
 from chess_piece import ChessPiece
 from square import Square
-from typing import Optional
 
 
 class Move:
@@ -13,6 +11,7 @@ class Move:
         self.scope = move_scope
         self.square_initial = piece.square
         self.square_final = square_final
+        self.captured_piece = square_final.occupant
         self.line_type: MoveLineType = self.get_line_type()  # TODO see if this is needed..
 
     def _is_knight_move(self) -> bool:
@@ -218,7 +217,7 @@ class MoveFactory:
             return self.board_manager.get_square(row_f, col_f)
         return None
 
-    def get_move(self, piece: ChessPiece, position_final: tuple[int, int]) -> Move or None:
+    def create(self, piece: ChessPiece, position_final: tuple[int, int]) -> Move or None:
         """
         Returns a move object with the correct scope if it's board-constrained.
         """

@@ -1,16 +1,14 @@
 # board.py
 from config import *
-from move import *
-from square import Square
 from chess_piece import *
 from control_map import ControlMap
+from typing import Callable
 
 
 class BoardManager:
-    def __init__(self):
-        self.board: list[list[Square]] = BoardSetup().board
+    def __init__(self, callback_initialize_piece: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
+        self.board: list[list[Square]] = BoardSetup(callback_initialize_piece).board
         self.threats_map = ControlMap()
-        self.move_factory = MoveFactory(self)
 
     def get_square(self, row, col) -> Square:
         return self.board[row][col]
@@ -20,24 +18,25 @@ class BoardManager:
 
 
 class BoardSetup:
-    def __init__(self):
-        self.board: list[list[Square]] = self.create_blank_board()
-        self.place_all_pieces()
+    def __init__(self, callback_initialize_piece: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
+        self.callback_initialize_piece = callback_initialize_piece
+        self.board: list[list[Square]] = self._create_blank_board()
+        self._place_all_pieces()
 
     @staticmethod
-    def create_blank_board() -> list[list[Square]]:
+    def _create_blank_board() -> list[list[Square]]:
         # Implement logic to create a blank board
         board = [[Square((i, j)) for j in range(BOARD_SIZE)] for i in range(BOARD_SIZE)]
         return board
 
-    def place_single_piece(self, piece_type: PieceType, color: Color, position: tuple[int, int]):
+    def _place_single_piece(self, piece_type: PieceType, color: Color, position: tuple[int, int]):
         # Implement logic to place a single piece on the board
         square = self.board[position[0]][position[1]]  # a reference to the corresponding square
         piece = ChessPieceFactory.create(piece_type, color, square)
-        square.operator.set_piece(piece)
+        self.callback_initialize_piece(piece, square, self)
 
-    def place_all_pieces(self):
+    def _place_all_pieces(self):
         for init_piece in InitPiece:
             piece_type, color, positions = init_piece.value
             for pose in positions:
-                self.place_single_piece(piece_type, color, pose)
+                self._place_single_piece(piece_type, color, pose)

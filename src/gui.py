@@ -1,14 +1,18 @@
 # gui.py
+# This gui is only for testing purposes
+
+from __future__ import annotations
 import tkinter as tk
-from board_manager import BoardManager
+from game_manager import GameManager
 from config import *
 from chess_piece import ChessPiece
 
 
 class ChessGUI:
-    def __init__(self, root, board_manager: BoardManager):
+    def __init__(self, root, game_manager: 'GameManager'):
         self.root = root
-        self.board_manager = board_manager
+        self.game_manager = game_manager
+        self.board_manager = self.game_manager.board_manager
         self.create_chess_board()
         self.update_board()  # Initial update to display the starting board
         self.selected_piece = None
@@ -90,16 +94,21 @@ class ChessGUI:
                 if square.occupant != self.selected_piece:
                     # If clicked on a different piece, select the new piece
                     self.selected_piece = square.occupant
-                    self.board_manager.update_legal_moves(square.occupant)  # TODO: fix this after GameManager intro
+                    self.game_manager._update_legal_moves(square.occupant)
                     self.highlight_move(square.occupant)
                 else:
                     # If clicked on a non-occupied square or the same piece, release the current selection
                     self.selected_piece = None
+
         elif square.occupant:
             # Select the new piece and highlight its legal moves
             self.selected_piece = square.occupant
-            self.board_manager.update_legal_moves(square.occupant)
+            self.game_manager._update_legal_moves(square.occupant)
             self.highlight_move(square.occupant)
+
+        else:
+            # Clicked on a non-occupied square, do nothing
+            pass
 
     def clear_highlights(self):
         # Clear all previous highlights
@@ -131,7 +140,7 @@ class ChessGUI:
 
     def test_1(self, test_row: int, test_col: int):
         piece = self.board_manager.get_square(test_row, test_col).occupant
-        self.board_manager.update_legal_moves(piece)
+        self.board_manager._update_legal_moves(piece)
         self.highlight_move(piece)
 
 
@@ -140,7 +149,8 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Chess Game")
 
-    game_board = BoardManager()
-    app = ChessGUI(root, game_board)
+    # game_board = BoardManager()
+    game_manager = GameManager()
+    app = ChessGUI(root, game_manager)
 
     root.mainloop()

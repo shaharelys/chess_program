@@ -1,12 +1,11 @@
 # main.py
-
-from program_manager import ProgramManager
+"""
+Initializes and starts the application, setting up necessary components.
+"""
 
 
 def main():
-    manager = ProgramManager()
-    game = manager.start_new_game()
-    # Add more logic to interact with the game
+    pass
 
 
 if __name__ == "__main__":

@@ -1,37 +1,44 @@
 # game_manager.py
+"""
+Manages a single game logic, including move processing, game state maintenance, and enforcing rules.
+"""
 from config import *
-from move import Move, MoveFactory
+from board_manager import BoardManager, BoardSetup
+from game_controller import GameController
 from square import Square
 from chess_piece import ChessPiece
-from board_manager import BoardManager
+from move import Move
 
 
 class GameManager:
-    def __init__(self, board_manager: BoardManager,):
-        self.board_manager = board_manager
-        self.move_factory = MoveFactory(board_manager)
+    def __init__(self):
+        self.board_manager = BoardManager(GameController._initialize_piece)  # TODO: solve issue related to this method
+        self.controller = GameController(self.board_manager)
         self.history: list[Move] = []
         self.current_player = Color.WHITE
 
-    def update_legal_moves(self, piece: ChessPiece) -> None:
+    def _update_history(self, move: Move) -> None:
         """
-        Updates the set of legal moves for this piece.
-        ChessPiece.legal_moves: dict[MoveScope, set['Move']]
+        Updates the history of moves.
         """
+        self.history.append(move)
 
-        for legal_moves_set in piece.legal_moves.values():
-            legal_moves_set.clear()
+    def _update_current_player(self) -> None:
+        """
+        Updates the current player.
+        """
+        self.current_player = Color.WHITE if self.current_player == Color.BLACK else Color.BLACK
 
-        hypothetical_moves_final_positions = piece.get_hypothetical_moves_final_positions()
+    def _update_on_move(self, move: Move) -> None:
+        """
+        Updates the game state after a move has been made.
+        """
+        self._update_history(move)
+        self._update_current_player()
 
-        for pose_f in hypothetical_moves_final_positions:
-            move = self.move_factory.get_move(piece, pose_f)  # Returns Move, or None if pose_f isn't board constrained
-
-            if move is None:
-                continue
-
-            if move.scope == MoveScope.STEP:
-                piece.legal_moves[MoveScope.STEP].add(move)
-            elif move.scope is MoveScope.CAPTURE:
-                piece.legal_moves[MoveScope.CAPTURE].add(move)
-
+    def execute_move(self, move: Move) -> None:
+        """
+        Executes a move.
+        """
+        self.controller.initiate_move_and_related_methods(move)
+        self._update_on_move(move)
