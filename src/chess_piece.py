@@ -1,5 +1,4 @@
 # chess_piece.py
-from __future__ import annotations
 from abc import ABC, abstractmethod
 from square import Square
 from config import *

@@ -58,27 +58,27 @@ class MoveValidation:
         assert move.scope == MoveScope.HYPOTHETICAL, "A move must start at the hypothetical scope."
 
         # Check for board constraints
-        if not self.is_board_constrained(move):
+        if not self._is_board_constrained(move):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.BOARD_CONSTRAINED)
 
         # Check for obstructions
-        if not self.is_unobstructed(move):
+        if not self._is_unobstructed(move):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.UNOBSTRUCTED)
 
         # Check for legality
-        if not self.is_legal(move):
+        if not self._is_legal(move):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.LEGAL)
 
         # Final checks for step or capture
-        if self.is_step(move):
+        if self._is_step(move):
             self._change_scope_safely(move, MoveScope.STEP)
-        elif self.is_capture(move):
+        elif self._is_capture(move):
             self._change_scope_safely(move, MoveScope.CAPTURE)
         elif isinstance(move.piece, chess_piece.Pawn):
             self._change_scope_safely(move, MoveScope.INVALID)
@@ -99,7 +99,7 @@ class MoveValidation:
         move.scope = new_scope
 
     @staticmethod
-    def is_board_constrained(move: Move) -> bool:
+    def _is_board_constrained(move: Move) -> bool:
         """
         Returns true if the move is within the board constraints.
 
@@ -111,7 +111,7 @@ class MoveValidation:
             return True
         return False
 
-    def is_unobstructed(self, move: Move) -> bool:
+    def _is_unobstructed(self, move: Move) -> bool:
         """
         Returns true if the move is unobstructed.
 
@@ -164,7 +164,7 @@ class MoveValidation:
             return True
         return False
 
-    def is_legal(self, move: Move) -> bool:
+    def _is_legal(self, move: Move) -> bool:
         """
         Returns true if the move is legal.
 
@@ -173,7 +173,7 @@ class MoveValidation:
         return not (self._is_revealing_check(move) or self._is_landing_on_friend(move))
 
     @staticmethod
-    def is_step(move: Move) -> bool:
+    def _is_step(move: Move) -> bool:
         """
         Returns true if the move is a step.
 
@@ -187,7 +187,7 @@ class MoveValidation:
         return move.square_final.occupant is None
 
     @staticmethod
-    def is_capture(move: Move) -> bool:
+    def _is_capture(move: Move) -> bool:
         """
         Returns true if the move is a capture.
 
@@ -208,7 +208,7 @@ class MoveFactory:
         self.board_manager = board_manager
         self.validation = MoveValidation(board_manager)
 
-    def _get_square_final(self, position_final: tuple[int, int]) -> Square or None:
+    def _get_square_final_if_exists(self, position_final: tuple[int, int]) -> Square or None:
         """
         Returns the square object at the final position if it exists.
         """
@@ -219,14 +219,15 @@ class MoveFactory:
 
     def create(self, piece: ChessPiece, position_final: tuple[int, int]) -> Move or None:
         """
-        Returns a move object with the correct scope if it's board-constrained.
+        Returns a move object with the correct scope if it's board-constrained, otherwise returns None.
         """
 
-        square_final = self._get_square_final(position_final)
+        square_final = self._get_square_final_if_exists(position_final)
 
         if square_final is None:
             return None
 
         move = Move(piece, MoveScope.HYPOTHETICAL, square_final)
-        self.validation.process_move(move)
-        return move
+
+        return self.validation.process_move(move)
+

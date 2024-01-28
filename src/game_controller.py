@@ -8,7 +8,7 @@ from config import *
 
 class GameController:
     def __init__(self):
-        self.board_manager = BoardManager(self._initialize_piece_on_board_setup)  # callback
+        self.board_manager = BoardManager(self._initialize_piece_on_board_setup)  # callback method in class signature
         self.move_factory = MoveFactory(self.board_manager)
 
     def _update_legal_moves(self, piece: ChessPiece) -> None:
@@ -26,7 +26,7 @@ class GameController:
             move = self.move_factory.create(piece, final_position)
 
             # None is returned when final position is not board-constrained
-            if move is None or move.scope == MoveScope.INVALID:
+            if move is None or move.scope is MoveScope.INVALID:
                 continue
 
             piece.legal_moves[move.scope].add(move)
@@ -44,7 +44,8 @@ class GameController:
 
     def _initialize_piece_on_board_setup(self, piece: ChessPiece, square: Square, caller: BoardSetup):
         """
-        On initialization by BoardSetup as callback, sets 'piece' on 'square' and updates its legal moves.
+        This method is called on initialization by BoardSetup as callback.
+        It sets 'piece' on 'square' and updates the piece's legal moves.
         """
         assert isinstance(caller, BoardSetup), "'caller' must be of type 'BoardSetup'."
 

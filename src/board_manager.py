@@ -1,13 +1,14 @@
 # board.py
 from config import *
-from chess_piece import *
+from chess_piece import ChessPiece, ChessPieceFactory
+from square import Square
 from control_map import ControlMap
 from typing import Callable
 
 
 class BoardManager:
-    def __init__(self, callback_initialize_piece: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
-        self.board: list[list[Square]] = BoardSetup(callback_initialize_piece).board
+    def __init__(self, callback_initialize_piece_on_board_setup: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
+        self.board: list[list[Square]] = BoardSetup(callback_initialize_piece_on_board_setup).board
         self.threats_map = ControlMap()
 
     def get_square(self, row, col) -> Square:
@@ -18,9 +19,10 @@ class BoardManager:
 
 
 class BoardSetup:
-    def __init__(self, callback_initialize_piece: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
-        self.callback_initialize_piece = callback_initialize_piece
+    def __init__(self, callback_initialize_piece_on_board_setup: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
+        self.callback_initialize_piece_on_board_setup = callback_initialize_piece_on_board_setup
         self.board: list[list[Square]] = self._create_blank_board()
+        self.chess_piece_factory = ChessPieceFactory()
         self._place_all_pieces()
 
     @staticmethod
@@ -32,8 +34,8 @@ class BoardSetup:
     def _place_single_piece(self, piece_type: PieceType, color: Color, position: tuple[int, int]):
         # Implement logic to place a single piece on the board
         square = self.board[position[0]][position[1]]  # a reference to the corresponding square
-        piece = ChessPieceFactory.create(piece_type, color, square)
-        self.callback_initialize_piece(piece, square, self)
+        piece = self.chess_piece_factory.create(piece_type, color, square)
+        self.callback_initialize_piece_on_board_setup(piece, square, self)
 
     def _place_all_pieces(self):
         for init_piece in InitPiece:
