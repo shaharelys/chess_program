@@ -11,9 +11,9 @@ class ChessGUI:
         self.root = tk.Tk()
         self.root.title("Chess Game")
         self.buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]  # 8x8 chess board
-        self.selected_position = None
         self.create_graphic_board()
-        self.highlighted_piece_square = None
+        self.selected_position = None
+        self.cache_highlighted_squares: set[tuple[int, int]] = set()
 
     @property
     def board(self):
@@ -56,43 +56,40 @@ class ChessGUI:
 
     def on_square_click(self, row, col):
         void = (None, None)
-        selected_square_content = self.board[self.selected_position[0]][self.selected_position[1]] \
-            if self.selected_position else void
+        former_row, former_col = self.selected_position if self.selected_position else void
+        former_selected_square_content = self.board[former_row][former_col] if self.selected_position else void
         new_square_content = self.board[row][col]
 
-        # Reset the highlight of the previously selected square
-        if self.highlighted_piece_square:
-            prev_row, prev_col = self.highlighted_piece_square
-            prev_color = "green" if (prev_row + prev_col) % 2 == 0 else "white"
-            self.highlight_square(prev_row, prev_col, color=prev_color)
+        # Reset the previously highlighted selected squares
+        if self.cache_highlighted_squares:
+            for move_row, move_col in self.cache_highlighted_squares:
+                self.reset_square_highlight(move_row, move_col)
 
         # Handle user clicking on an empty square
-        if selected_square_content == void and new_square_content == void:
+        if former_selected_square_content == void and new_square_content == void:
             # Nothing to do here
             print("# state: IDLE")
             pass
 
         # Handle user selecting a piece
-        elif selected_square_content == void and new_square_content != void:
+        elif former_selected_square_content == void and new_square_content != void:
             # User has clicked on a square with a piece, select this piece
             print("# State: SELECTED A PIECE")
             self.selected_position = (row, col)
 
             # Highlight the selected piece and its legal moves
-
-            self.highlighted_piece_square = (row, col)
-            self.highlight_square(row, col)
+            self.highlight_and_list_square(row, col)
             self.highlight_moves_of_piece_at_position(position=(row, col))
 
         # Handle user moving a selected piece
-        elif selected_square_content != void and new_square_content == void:
+        elif former_selected_square_content != void and new_square_content == void:
             # Attempt to move the selected piece to the clicked empty square
             print("# State: STEP ATTEMPT")
             self.execute_move(self.selected_position, (row, col))
             self.selected_position = None
 
         # Handle user moving a selected piece to a square with another piece (capture scenario)
-        elif selected_square_content != void and new_square_content != void:
+        elif former_selected_square_content != void and new_square_content != void:
             # Attempt to move the selected piece to capture the piece on the clicked square
             print("# State: CAPTURE ATTEMPT")
             self.execute_move(self.selected_position, (row, col))
@@ -110,12 +107,13 @@ class ChessGUI:
         except Exception as e:
             print(f"\t-> Error executing move: {e}")
 
-    def highlight_square(self, row, col, color="yellow"):
+    def highlight_and_list_square(self, row, col, color="yellow"):
         """
-        Highlights the square at the specified row and column.
+        Highlights the square at the specified row and column and lists it in cache.
         """
         print(f"\t-> Highlighting square at ({row}, {col})")
         self.buttons[row][col].config(bg=color)
+        self.cache_highlighted_squares.add((row, col))
 
     def highlight_moves_of_piece_at_position(self, position):
         """
@@ -124,7 +122,11 @@ class ChessGUI:
         row, col = position
         legal_moves = self.api_manager.get_legal_moves_positions((row, col))
         for move_row, move_col in legal_moves:
-            self.highlight_square(move_row, move_col, color="light blue")
+            self.highlight_and_list_square(move_row, move_col, color="light blue")
+
+    def reset_square_highlight(self, row, col):
+        color = "green" if (row + col) % 2 == 0 else "white"
+        self.buttons[row][col].config(bg=color)
 
 
 if __name__ == "__main__":
