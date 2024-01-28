@@ -34,12 +34,12 @@ class ControlMap:
         records of controlling pieces. It ensures these are in sync and updated.
         """
         # TODO: See if this method is required
-        old_controlled_squares = piece.controlled_squares.copy()
+        # old_controlled_squares = piece.controlled_squares.copy()
         piece.update_controlled_squares()
-        for square in piece.controlled_squares:
-            square.controlled_by.add(piece)
-        for square in old_controlled_squares - piece.controlled_squares:
-            square.controlled_by.remove(piece)
+        # for square in piece.controlled_squares:
+        #     square.controlled_by.add(piece)
+        # for square in old_controlled_squares - piece.controlled_squares:
+        #     square.controlled_by.remove(piece)
 
     def update_lines(self, piece: ChessPiece, captured: Optional[ChessPiece], square_final: Square) -> None:
         self.lines.remove_piece(piece)

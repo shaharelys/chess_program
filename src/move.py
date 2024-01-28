@@ -14,6 +14,14 @@ class Move:
         self.captured_piece = square_final.occupant
         self.line_type: MoveLineType = self.get_line_type()  # TODO see if this is needed..
 
+    @property
+    def is_legal(self) -> bool:
+        """
+        Returns true if the move is legal.
+        Note, 'MoveScope.LEGAL' is not included because it's only an intermediate scope state and not a sink state.
+        """
+        return self.scope == MoveScope.STEP or self.scope == MoveScope.CAPTURE
+
     def _is_knight_move(self) -> bool:
         return isinstance(self.piece, chess_piece.Knight)
 
@@ -51,7 +59,7 @@ class MoveValidation:
     def process_move(self, move: Move) -> MoveScope:
         """
         Processes the move through various validation checks and updates its scope sequentially.
-        :return: The final scope of the move; MoveScope.STEP, ...CAPTURE, or ...INVALID.
+        Returns the final scope of the move; MoveScope.STEP, ...CAPTURE, or ...INVALID.
         """
 
         # Assert scope starts at hypothetical
@@ -222,12 +230,16 @@ class MoveFactory:
         Returns a move object with the correct scope if it's board-constrained, otherwise returns None.
         """
 
+        assert position_final in piece.get_hypothetical_moves_final_positions(), \
+            "Final position must be in the set of that piece's hypothetical final positions."
+
         square_final = self._get_square_final_if_exists(position_final)
 
         if square_final is None:
             return None
 
         move = Move(piece, MoveScope.HYPOTHETICAL, square_final)
+        self.validation.process_move(move)  # this sets the scope of the move
+        return move  # this can return Invalid moves
 
-        return self.validation.process_move(move)
 

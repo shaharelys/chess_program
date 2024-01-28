@@ -5,11 +5,25 @@ from config import *
 
 
 class ChessPiece(ABC):
-    def __init__(self, piece_type: PieceType, color: Color, square: Square):
+    def __init__(self, piece_type: PieceType, color: Color):
         self.piece_type = piece_type
         self.color = color
-        self.square = square
-        self.legal_moves: dict[MoveScope, set['Move']] = {MoveScope.STEP: set(), MoveScope.CAPTURE: set()}
+        self.square = None
+
+    def clear_legal_moves(self) -> None:
+        """
+        Clears the legal moves of this piece.
+        The use of the legal_moves attribute is on-demand, and it is cleared right after use.
+        """
+        for move_scope_set in self.legal_moves.values():
+            move_scope_set.clear()
+
+    @property
+    def legal_moves_final_positions(self) -> set[tuple[int, int]]:
+        """
+        Returns the set of positions that this piece can step to.
+        """
+        return {move.square_final.position for move_scope_set in self.legal_moves.values() for move in move_scope_set}
 
     @property
     def controlled_squares(self) -> set[Square]:
@@ -49,8 +63,8 @@ class ChessPiece(ABC):
 
 
 class Pawn(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.PAWN, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.PAWN, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
 
@@ -69,40 +83,40 @@ class Pawn(ChessPiece):
 
 
 class Knight(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.KNIGHT, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.KNIGHT, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.KNIGHT.value
 
 
 class Bishop(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.BISHOP, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.BISHOP, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.BISHOP.value
 
 
 class Rook(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.ROOK, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.ROOK, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.ROOK.value
 
 
 class Queen(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.QUEEN, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.QUEEN, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.QUEEN.value
 
 
 class King(ChessPiece):
-    def __init__(self, color: Color, square: Square):
-        super().__init__(piece_type=PieceType.KING, color=color, square=square)
+    def __init__(self, color: Color):
+        super().__init__(piece_type=PieceType.KING, color=color)
 
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         return HypotheticalPositionDeltas.KING.value
@@ -110,18 +124,18 @@ class King(ChessPiece):
 
 class ChessPieceFactory:
     @staticmethod
-    def create(piece_type: PieceType, color: Color, square: Square) -> ChessPiece:
+    def create(piece_type: PieceType, color: Color) -> ChessPiece:
         if piece_type == PieceType.PAWN:
-            return Pawn(color, square)
+            return Pawn(color)
         elif piece_type == PieceType.KNIGHT:
-            return Knight(color, square)
+            return Knight(color)
         elif piece_type == PieceType.BISHOP:
-            return Bishop(color, square)
+            return Bishop(color)
         elif piece_type == PieceType.ROOK:
-            return Rook(color, square)
+            return Rook(color)
         elif piece_type == PieceType.QUEEN:
-            return Queen(color, square)
+            return Queen(color)
         elif piece_type == PieceType.KING:
-            return King(color, square)
+            return King(color)
         else:
             raise ValueError("Invalid piece type")

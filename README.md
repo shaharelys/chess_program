@@ -23,4 +23,4 @@ This game is still under development, focusing on implementing and refining the 
 
 - **chess_piece.py**: Defines chess pieces (Pawn, Knight, Bishop, Rook, Queen, King) with their movements and control over squares. Uses abstract base class `ChessPiece` for shared functionality.
 
-- **control_map.py**: Manages control maps and line-of-sight for pieces, updating controlled squares and handling piece movements.
+- **game_controller.py**: Handles game operations flow, mainly move processing.

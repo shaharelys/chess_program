@@ -11,14 +11,15 @@ class GameController:
         self.board_manager = BoardManager(self._initialize_piece_on_board_setup)  # callback method in class signature
         self.move_factory = MoveFactory(self.board_manager)
 
-    def _update_legal_moves(self, piece: ChessPiece) -> None:
+    def get_legal_moves(self, piece: ChessPiece) -> dict[MoveScope, set['Move']]:
         """
         Updates the set of legal moves for this piece.
         Note: ChessPiece.legal_moves: dict[MoveScope, set['Move']]
         """
+        legal_moves: dict[MoveScope, set['Move']] = {MoveScope.STEP: set(), MoveScope.CAPTURE: set()}
 
-        for legal_moves_set in piece.legal_moves.values():
-            legal_moves_set.clear()
+        if piece is None:
+            raise ValueError("'piece' must not be None.")
 
         hypothetical_moves_final_positions = piece.get_hypothetical_moves_final_positions()
 
@@ -29,7 +30,9 @@ class GameController:
             if move is None or move.scope is MoveScope.INVALID:
                 continue
 
-            piece.legal_moves[move.scope].add(move)
+            legal_moves[move.scope].add(move)
+
+        return legal_moves
 
     @staticmethod
     def _set_piece(piece: ChessPiece, square: Square):
@@ -50,7 +53,6 @@ class GameController:
         assert isinstance(caller, BoardSetup), "'caller' must be of type 'BoardSetup'."
 
         self._set_piece(piece, square)
-        self._update_legal_moves(piece)
 
     @staticmethod
     def _remove_piece(piece: ChessPiece, square: Square):
@@ -103,4 +105,4 @@ class GameController:
         initiates a move while supporting private related operations.
         """
         self._initiate_move(move)
-        self._update_legal_moves(move.piece)
+        # add related methods here

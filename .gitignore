@@ -1,6 +1,9 @@
 # Ignore virtual environment directory
 /venv
 
+# Ignore archive files
+/archive
+
 # Ignore IDE-specific directory (PyCharm)
 /.idea
 

@@ -134,3 +134,12 @@ class HypotheticalPositionDeltas(Enum):
         {(i, j) for k in (range(-BOARD_SIZE + 1, BOARD_SIZE - 1)) for i, j in ((k, 0), (0, k)) if k != 0})
     KING = {(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1) if (i, j) != (0, 0)}
 
+
+class GameStatus(Enum):
+    """
+    Enum representing the status of a chess game.
+    """
+    ACTIVE = 0
+    WHITE_WIN = 1
+    BLACK_WIN = 2
+    STALEMATE = 3

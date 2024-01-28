@@ -2,14 +2,12 @@
 from config import *
 from chess_piece import ChessPiece, ChessPieceFactory
 from square import Square
-from control_map import ControlMap
 from typing import Callable
 
 
 class BoardManager:
     def __init__(self, callback_initialize_piece_on_board_setup: Callable[[ChessPiece, Square, 'BoardSetup'], None]):
         self.board: list[list[Square]] = BoardSetup(callback_initialize_piece_on_board_setup).board
-        self.threats_map = ControlMap()
 
     def get_square(self, row, col) -> Square:
         return self.board[row][col]
@@ -33,8 +31,8 @@ class BoardSetup:
 
     def _place_single_piece(self, piece_type: PieceType, color: Color, position: tuple[int, int]):
         # Implement logic to place a single piece on the board
+        piece = self.chess_piece_factory.create(piece_type, color)
         square = self.board[position[0]][position[1]]  # a reference to the corresponding square
-        piece = self.chess_piece_factory.create(piece_type, color, square)
         self.callback_initialize_piece_on_board_setup(piece, square, self)
 
     def _place_all_pieces(self):
