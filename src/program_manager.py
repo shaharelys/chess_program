@@ -13,7 +13,7 @@ class ProgramManager:
         """
         return self._game_manager.piece_type_board_state
 
-    def get_legal_moves_positions(self, position: tuple[int, int]) -> set[tuple[int, int]]:
+    def get_legal_moves_positions_by_position(self, position: tuple[int, int]) -> set[tuple[int, int]]:
         """
         Returns a set of legal moves final positions for the piece at the specified position.
         """
@@ -23,8 +23,9 @@ class ProgramManager:
             assert piece is not None, "There is no piece on the specified square."
             return set()
         legal_moves = self._game_manager.controller.get_legal_moves(piece)
-        legal_moves_final_positions = {move.square_final.position for move_scope_set in legal_moves.values() for move in
-                                       move_scope_set if move.is_legal}
+        legal_moves_final_positions = {move.square_final.position
+                                       for move_scope_set in legal_moves.values()
+                                       for move in move_scope_set if move.is_legal}
         return legal_moves_final_positions
 
     def execute_move_by_position(self, piece_current_position: tuple[int, int],
@@ -38,7 +39,7 @@ class ProgramManager:
 
         move = self._game_manager.controller.move_factory.create(piece, piece_final_position)
         if move and move.is_legal:
-            self._game_manager.execute_move(move)
+            self._game_manager.execute_update_validate_on_move(move)
         else:
             raise ValueError("Illegal move.")
 
@@ -46,4 +47,4 @@ class ProgramManager:
         return self._game_manager.get_game_status()
 
     def get_current_player(self) -> Color:
-        return self._game_manager.current_player
+        return self._game_manager.current_player_color

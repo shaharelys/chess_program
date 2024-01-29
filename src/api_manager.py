@@ -14,11 +14,11 @@ class APIManager:
         """
         return self._program_manager.get_board_state()
 
-    def get_legal_moves_positions(self, position: tuple[int, int]) -> set[tuple[int, int]]:
+    def get_legal_moves_positions_by_position(self, position: tuple[int, int]) -> set[tuple[int, int]]:
         """
         Returns a list of legal moves for the piece at the specified position.
         """
-        return self._program_manager.get_legal_moves_positions(position)
+        return self._program_manager.get_legal_moves_positions_by_position(position)
 
     def execute_move_by_position(self, piece_current_position: tuple[int, int],
                                  piece_final_position: tuple[int, int]) -> None:

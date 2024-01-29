@@ -3,9 +3,9 @@
 Manages a single game logic, including move processing, game state maintenance, and enforcing rules.
 """
 from config import *
-from board_manager import BoardManager
 from game_controller import GameController
 from move import Move
+from chess_piece import ChessPiece, King
 
 
 class GameManager:
@@ -13,9 +13,18 @@ class GameManager:
         self.controller = GameController()
         self.board_manager = self.controller.board_manager
         self.history: list[Move] = []
-        self.current_player = Color.WHITE
+        self.current_player_color = Color.WHITE
         self.piece_type_board_state = None
         self._update_piece_type_board_state()
+        self.white_king_ref: King = self.get_king_ref(Color.WHITE)
+        self.black_king_ref: King = self.get_king_ref(Color.BLACK)
+
+    def get_king_ref(self, color: Color) -> King:
+        """
+        Returns the king's reference at the beginning of the game.
+        """
+        row, col = InitPiece.KING_WHITE.positions[0] if color is Color.WHITE else InitPiece.KING_BLACK.positions[0]
+        return self.board_manager.get_square(row, col).occupant
 
     def _update_history(self, move: Move) -> None:
         """
@@ -27,7 +36,7 @@ class GameManager:
         """
         Updates the current player.
         """
-        self.current_player = Color.WHITE if self.current_player == Color.BLACK else Color.BLACK
+        self.current_player_color = Color.WHITE if self.current_player_color == Color.BLACK else Color.BLACK
 
     def _update_on_move(self, move: Move) -> None:
         """
@@ -37,10 +46,18 @@ class GameManager:
         self._update_current_player()
         self._update_piece_type_board_state()
 
-    def execute_move(self, move: Move) -> None:
+    def _validate_on_move(self, move: Move) -> None:
+        """
+        Validates a move.
+        """
+        if move.piece.color != self.current_player_color:
+            raise ValueError("It is not the current player's turn.")
+
+    def execute_update_validate_on_move(self, move: Move) -> None:
         """
         Executes a move.
         """
+        self._validate_on_move(move)
         self.controller.initiate_move_and_related_methods(move)
         self._update_on_move(move)
 
@@ -51,7 +68,7 @@ class GameManager:
         # TODO
         return GameStatus.ACTIVE
 
-    def _update_piece_type_board_state(self) -> list[list[(PieceType, Color) or (None, None)]]:
+    def _update_piece_type_board_state(self) -> None:
         """
         This method creates and updates a board of piece types from the board of squares.
         New board structure for the API: list[list[(PieceType, Color) or None]]

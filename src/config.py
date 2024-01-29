@@ -102,10 +102,11 @@ ALLOWED_MOVE_SCOPE_TRANSITIONS = {
 }
 
 
-class MoveLineType(Enum):
+class LineType(Enum):
     """
     Enum representing different lines of a single chess move.
     """
+    INVALID = -1
     ROW = 0
     COLUMN = 1
     DIAGONAL_RIGHT_UP = 2

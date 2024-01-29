@@ -10,28 +10,6 @@ class ChessPiece(ABC):
         self.color = color
         self.square = None
 
-    def clear_legal_moves(self) -> None:
-        """
-        Clears the legal moves of this piece.
-        The use of the legal_moves attribute is on-demand, and it is cleared right after use.
-        """
-        for move_scope_set in self.legal_moves.values():
-            move_scope_set.clear()
-
-    @property
-    def legal_moves_final_positions(self) -> set[tuple[int, int]]:
-        """
-        Returns the set of positions that this piece can step to.
-        """
-        return {move.square_final.position for move_scope_set in self.legal_moves.values() for move in move_scope_set}
-
-    @property
-    def controlled_squares(self) -> set[Square]:
-        """
-        Returns the set of squares that this piece controls.
-        """
-        return {move.square_final for move_scope_set in self.legal_moves.values() for move in move_scope_set}
-
     @abstractmethod
     def _hypothetical_move_deltas(self) -> set[tuple[int, int]]:
         """

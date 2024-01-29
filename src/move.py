@@ -1,8 +1,8 @@
 # move.py
 from config import *
-import chess_piece
-from chess_piece import ChessPiece
+from chess_piece import *
 from square import Square
+from typing import Optional
 
 
 class Move:
@@ -12,7 +12,6 @@ class Move:
         self.square_initial = piece.square
         self.square_final = square_final
         self.captured_piece = square_final.occupant
-        self.line_type: MoveLineType = self.get_line_type()  # TODO see if this is needed..
 
     @property
     def is_legal(self) -> bool:
@@ -20,41 +19,30 @@ class Move:
         Returns true if the move is legal.
         Note, 'MoveScope.LEGAL' is not included because it's only an intermediate scope state and not a sink state.
         """
-        return self.scope == MoveScope.STEP or self.scope == MoveScope.CAPTURE
-
-    def _is_knight_move(self) -> bool:
-        return isinstance(self.piece, chess_piece.Knight)
-
-    def _is_row_move(self) -> bool:
-        return self.square_initial.position[0] == self.square_final.position[0]
-
-    def _is_column_move(self) -> bool:
-        return self.square_initial.position[1] == self.square_final.position[1]
-
-    def _is_diagonal_up_right_move(self) -> bool:
-        return self.square_initial.position[0] - self.square_initial.position[1] \
-            == self.square_final.position[0] - self.square_final.position[1]
-
-    def _is_diagonal_down_right_move(self) -> bool:
-        return self.square_initial.position[0] + self.square_initial.position[1] \
-            == self.square_final.position[0] + self.square_final.position[1]
-
-    def get_line_type(self) -> MoveLineType:
-        if self._is_knight_move():
-            return MoveLineType.KNIGHT_MOVE
-        if self._is_row_move():
-            return MoveLineType.ROW
-        if self._is_column_move():
-            return MoveLineType.COLUMN
-        if self._is_diagonal_up_right_move():
-            return MoveLineType.DIAGONAL_RIGHT_UP
-        if self._is_diagonal_down_right_move():
-            return MoveLineType.DIAGONAL_RIGHT_DOWN
+        return self.scope is MoveScope.STEP or self.scope is MoveScope.CAPTURE
 
 
 class MoveValidation:
     def __init__(self, board_manager: 'BoardManager'):
         self.board_manager = board_manager
+
+    @staticmethod
+    def _get_line_type(initial_position: tuple[int, int], final_position: tuple[int, int]) -> LineType:
+        if initial_position[0] == final_position[0]:
+            return LineType.ROW
+        if initial_position[1] == final_position[1]:
+            return LineType.COLUMN
+        if initial_position[0] - initial_position[1] == final_position[0] - final_position[1]:
+            return LineType.DIAGONAL_RIGHT_UP
+        if initial_position[0] + initial_position[1] == final_position[0] + final_position[1]:
+            return LineType.DIAGONAL_RIGHT_DOWN
+        else:
+            return LineType.INVALID
+
+    def _get_move_line_type(self, move: Move) -> LineType:
+        if isinstance(move.piece, Knight):
+            return LineType.KNIGHT_MOVE
+        return self._get_line_type(move.square_initial.position, move.square_final.position)
 
     def process_move(self, move: Move) -> MoveScope:
         """
@@ -66,7 +54,7 @@ class MoveValidation:
         assert move.scope == MoveScope.HYPOTHETICAL, "A move must start at the hypothetical scope."
 
         # Check for board constraints
-        if not self._is_board_constrained(move):
+        if not self._is_move_board_constrained(move):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.BOARD_CONSTRAINED)
@@ -88,7 +76,7 @@ class MoveValidation:
             self._change_scope_safely(move, MoveScope.STEP)
         elif self._is_capture(move):
             self._change_scope_safely(move, MoveScope.CAPTURE)
-        elif isinstance(move.piece, chess_piece.Pawn):
+        elif isinstance(move.piece, Pawn):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         else:
@@ -107,7 +95,15 @@ class MoveValidation:
         move.scope = new_scope
 
     @staticmethod
-    def _is_board_constrained(move: Move) -> bool:
+    def _is_board_constrained(row: int, col: int) -> bool:
+        """
+        Returns true if the position is within the board constraints.
+        """
+        if 0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE:
+            return True
+        return False
+
+    def _is_move_board_constrained(self, move: Move) -> bool:
         """
         Returns true if the move is within the board constraints.
 
@@ -115,52 +111,130 @@ class MoveValidation:
         that are within the boundaries of the chessboard.
         """
         row_f, col_f = move.square_final.position
-        if 0 <= row_f < BOARD_SIZE and 0 <= col_f < BOARD_SIZE:
-            return True
-        return False
+        return self._is_board_constrained(row_f, col_f)
+
+    def _find_next_piece_in_line(self, king: King, piece: ChessPiece) -> Optional[ChessPiece]:
+        """
+        This method is a helper function to the _is_revealing_check method.
+        It finds the first piece on the common line of the king and a piece attempting a move,
+        after the piece attempting a move.
+        """
+
+        king_row, king_col = king.square.position
+        piece_row, piece_col = piece.square.position
+
+        row_step = self._get_step(king_row, piece_row)
+        col_step = self._get_step(king_col, piece_col)
+
+        # Already checked the line between the king and the piece, now starting from the piece onwards
+        curr_row, curr_col = piece_row + row_step, piece_col + col_step
+
+        # Iterate outwards from the piece up to the board edge
+        while self._is_board_constrained(curr_row, curr_col):
+            current_square = self.board_manager.get_square(curr_row, curr_col)
+            if current_square.occupant:
+                return current_square.occupant
+
+            curr_row += row_step
+            curr_col += col_step
+
+        return None
+
+    def _is_clean_line_between_squares(self, square1: Square, square2: Square) -> bool:
+        """
+        Checks if all squares between two given squares are unoccupied and are in a straight line.
+        """
+
+        row1, col1 = square1.position
+        row2, col2 = square2.position
+
+        row_step = self._get_step(row1, row2)
+        col_step = self._get_step(col1, col2)
+
+        curr_row, curr_col = row1 + row_step, col1 + col_step
+
+        # Iterate through squares between square1 and square2
+        while (curr_row, curr_col) != (row2, col2):
+            if self.board_manager.is_occupied(curr_row, curr_col):
+                return False
+
+            curr_row += row_step
+            curr_col += col_step
+
+        return True
 
     def _is_unobstructed(self, move: Move) -> bool:
         """
         Returns true if the move is unobstructed.
 
         Unobstructed Move: Considers pieces that may block the path of a move.
-        Includes moves up to the first obstructing piece. This category represents
-        the moves that will be visually indicated on the game interface.
+        Includes moves up to the first obstructing piece.
         """
 
-        if isinstance(move.piece, chess_piece.Knight) \
-                or isinstance(move.piece, chess_piece.Pawn) \
-                or isinstance(move.piece, chess_piece.King):
-            return True  # Knights, Pawns, and Kings moves are always unobstructed
+        if isinstance(move.piece, (King, Knight, Pawn)):
+            return True  # Kings, Knights, and Pawns moves are always unobstructed
 
-        row_i, col_i = move.square_initial.position
-        row_f, col_f = move.square_final.position
-
-        row_step = self._get_step(row_i, row_f)
-        col_step = self._get_step(col_i, col_f)
-
-        row_c, col_c = row_i + row_step, col_i + col_step  # Current position as row_c, col_c
-
-        while (row_c, col_c) != (row_f, col_f):
-            if self.board_manager.is_occupied(row_c, col_c):
-                return False  # Path is obstructed
-
-            row_c += row_step
-            col_c += col_step
-
-        return True
+        square_i, square_f = move.square_initial, move.square_final
+        return self._is_clean_line_between_squares(square_i, square_f)
 
     @staticmethod
-    def _get_step(start, end) -> int:
+    def _get_step(start: int, end: int) -> int:
+        """
+        Returns the needed step is a line direction between two index values of two rows or columns.
+        """
         return 1 if start < end else -1 if start > end else 0
 
-    @staticmethod
-    def _is_revealing_check(move: Move) -> bool:
+    def _is_revealing_check(self, move: Move) -> bool:
         """
-        Returns true if the piece move is revealing its king to a check.
+        Determines if a move exposes the king to a check.
+        It checks if the moving piece is in line with the king and
+        if removing it would open up a line of attack from an opposing piece.
         """
-        # Todo
-        return False
+
+        my_color = move.piece.color
+        my_king_ref = self.board_manager.white_king_ref if my_color is Color.WHITE \
+            else self.board_manager.black_king_ref
+        common_line_type = self._get_line_type(move.square_initial.position, my_king_ref.square.position)
+
+        # Check if the king and the piece do not have a common line.
+        if common_line_type is LineType.INVALID:
+            return False
+
+        # Check if the piece moves along the common line with the king
+        if common_line_type == self._get_move_line_type(move):
+            return False
+
+        # Check if there is another piece between the king and the piece
+        square1, square2 = my_king_ref.square, move.square_initial  # Starting from the king may be more efficient
+        if not self._is_clean_line_between_squares(square1, square2):
+            return False
+
+        # Find the first piece 'after' the piece (from the king perspective) along the line
+        next_piece_in_line = self._find_next_piece_in_line(my_king_ref, move.piece)
+
+        # If no next piece in line
+        if next_piece_in_line is None:
+            return False
+
+        # If next piece in line is a friend
+        if next_piece_in_line.color == my_color:
+            return False
+
+        # If next piece type cannot move to my square by definition
+        if isinstance(next_piece_in_line, (King, Knight, Pawn)):
+            return False
+
+        if isinstance(next_piece_in_line, Rook) and common_line_type in [LineType.ROW, LineType.COLUMN]:
+            return True
+
+        if isinstance(next_piece_in_line, Bishop) \
+                and common_line_type in [LineType.DIAGONAL_RIGHT_UP, LineType.DIAGONAL_RIGHT_DOWN]:
+            return True
+
+        if isinstance(next_piece_in_line, Queen):
+            return True
+
+        raise ValueError("Something went wrong. A piece must be either a King, Knight, Pawn, Rook, Bishop, or Queen.")
 
     @staticmethod
     def _is_landing_on_friend(move: Move) -> bool:
@@ -180,8 +254,7 @@ class MoveValidation:
         """
         return not (self._is_revealing_check(move) or self._is_landing_on_friend(move))
 
-    @staticmethod
-    def _is_step(move: Move) -> bool:
+    def _is_step(self, move: Move) -> bool:
         """
         Returns true if the move is a step.
 
@@ -189,13 +262,12 @@ class MoveValidation:
         """
 
         # pawn check
-        if isinstance(move.piece, chess_piece.Pawn) and not move.line_type == MoveLineType.COLUMN:
+        if isinstance(move.piece, Pawn) and not self._get_move_line_type(move) == LineType.COLUMN:
             return False  # pawns can only step forward on the same column
 
         return move.square_final.occupant is None
 
-    @staticmethod
-    def _is_capture(move: Move) -> bool:
+    def _is_capture(self, move: Move) -> bool:
         """
         Returns true if the move is a capture.
 
@@ -203,9 +275,8 @@ class MoveValidation:
         """
 
         # pawn check
-        if isinstance(move.piece, chess_piece.Pawn) \
-                and not (move.line_type == MoveLineType.DIAGONAL_RIGHT_UP
-                         or move.line_type == MoveLineType.DIAGONAL_RIGHT_DOWN):
+        if isinstance(move.piece, Pawn) \
+                and self._get_move_line_type(move) not in [LineType.DIAGONAL_RIGHT_UP, LineType.DIAGONAL_RIGHT_DOWN]:
             return False  # pawns can only capture diagonally
 
         return move.square_final.occupant is not None
@@ -241,5 +312,3 @@ class MoveFactory:
         move = Move(piece, MoveScope.HYPOTHETICAL, square_final)
         self.validation.process_move(move)  # this sets the scope of the move
         return move  # this can return Invalid moves
-
-
