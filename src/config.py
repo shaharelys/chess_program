@@ -126,7 +126,6 @@ class HypotheticalPositionDeltas(Enum):
     PAWN_WHITE_START = {(2, 0), (1, 0), (1, 1), (1, -1)}
     PAWN_BLACK_START = {(-2, 0), (-1, 0), (-1, 1), (-1, -1)}
 
-
     # Deltas for class MajorChessPiece (of which steps and captures are the same)
     KNIGHT = {(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)}
     BISHOP = {(i, j) for i in (range(-BOARD_SIZE + 1, BOARD_SIZE - 1)) for j in (i, -i) if i != 0}
@@ -144,3 +143,12 @@ class GameStatus(Enum):
     WHITE_WIN = 1
     BLACK_WIN = 2
     STALEMATE = 3
+
+
+class CheckStatus(Enum):
+    """
+    Enum representing check status of a chess game.
+    """
+    NO_CHECK = 0
+    WHITE_UNDER_CHECK = 1
+    BLACK_UNDER_CHECK = 2

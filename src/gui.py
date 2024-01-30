@@ -2,7 +2,7 @@
 import tkinter as tk
 from api_manager import APIManager
 from program_manager import ProgramManager
-from config import BOARD_SIZE, Color, PieceType
+from config import BOARD_SIZE, Color, PieceType, CheckStatus
 
 
 class ChessGUI:
@@ -16,6 +16,12 @@ class ChessGUI:
         self.cache_highlighted_squares: set[tuple[int, int]] = set()
 
     """api methods:"""
+    @property
+    def check_status(self) -> CheckStatus:
+        """
+        Returns the current check status of the game
+        """
+        return self.api_manager.get_check_status()
 
     @property
     def board(self) -> list[list[(PieceType, Color) or (None, None)]]:
@@ -70,7 +76,7 @@ class ChessGUI:
         if piece_type is None:
             return ''
         type_str = piece_type.name[0]
-        color_suffix = ' | W' if piece_color == Color.WHITE else ' | B'
+        color_suffix = '⬜' if piece_color == Color.WHITE else '⬛'
         return type_str + color_suffix
 
     def run(self) -> None:

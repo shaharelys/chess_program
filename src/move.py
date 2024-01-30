@@ -44,7 +44,7 @@ class MoveValidation:
             return LineType.KNIGHT_MOVE
         return self._get_line_type(move.square_initial.position, move.square_final.position)
 
-    def process_move(self, move: Move) -> MoveScope:
+    def process_move(self, move: Move, allow_moves_while_pinned: bool) -> MoveScope:
         """
         Processes the move through various validation checks and updates its scope sequentially.
         Returns the final scope of the move; MoveScope.STEP, ...CAPTURE, or ...INVALID.
@@ -65,8 +65,8 @@ class MoveValidation:
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.UNOBSTRUCTED)
 
-        # Check for legality
-        if not self._is_legal(move):
+        # Check for legality. allow_moves_while_pinned is used for getting squares threatened by a piece
+        if not (allow_moves_while_pinned or self._is_legal(move)):
             self._change_scope_safely(move, MoveScope.INVALID)
             return MoveScope.INVALID
         self._change_scope_safely(move, MoveScope.LEGAL)
@@ -192,8 +192,8 @@ class MoveValidation:
         """
 
         my_color = move.piece.color
-        my_king_ref = self.board_manager.white_king_ref if my_color is Color.WHITE \
-            else self.board_manager.black_king_ref
+        my_king_ref = self.board_manager.white_king if my_color is Color.WHITE \
+            else self.board_manager.black_king
         common_line_type = self._get_line_type(move.square_initial.position, my_king_ref.square.position)
 
         # Check if the king and the piece do not have a common line.
@@ -249,7 +249,7 @@ class MoveValidation:
     def _is_legal(self, move: Move) -> bool:
         """
         Returns true if the move is legal.
-
+        # TODO: remove this definition and put _is_revealing_check and _is_landing_on_friend under process_move
         Legal Move: Includes Unobstructed Moves that don't reveal the king to a check and don't land on a friendly piece.
         """
         return not (self._is_revealing_check(move) or self._is_landing_on_friend(move))
@@ -296,7 +296,8 @@ class MoveFactory:
             return self.board_manager.get_square(row_f, col_f)
         return None
 
-    def create(self, piece: ChessPiece, position_final: tuple[int, int]) -> Move or None:
+    def create(self, piece: ChessPiece, position_final: tuple[int, int], allow_move_while_pinned: bool = False)\
+            -> Move or None:
         """
         Returns a move object with the correct scope if it's board-constrained, otherwise returns None.
         """
@@ -310,5 +311,13 @@ class MoveFactory:
             return None
 
         move = Move(piece, MoveScope.HYPOTHETICAL, square_final)
-        self.validation.process_move(move)  # this sets the scope of the move
+        self.validation.process_move(move, allow_move_while_pinned)  # this sets the scope of the move
         return move  # this can return Invalid moves
+
+    def create_threatening_move(self, piece: ChessPiece, position_final: tuple[int, int]) -> Optional[Move]:
+        """
+        This method is used as a helper method to get the squares threatened by a piece when checking for a check.
+        The only difference from 'create' is that we want to get as well moves that are not legal as the
+        piece is pinned, but still threaten a square.
+        """
+        return self.create(piece, position_final, allow_move_while_pinned=True)

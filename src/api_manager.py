@@ -38,3 +38,10 @@ class APIManager:
         Returns the current player's color.
         """
         return self._program_manager.get_current_player()
+
+    def get_check_status(self) -> 'CheckStatus':
+        """
+        Returns the current check status of the game
+        """
+        return self._program_manager.get_check_status()
+

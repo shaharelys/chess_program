@@ -2,37 +2,71 @@
 from board_manager import BoardManager, BoardSetup
 from square import Square
 from move import Move, MoveFactory
-from chess_piece import ChessPiece
+from chess_piece import ChessPiece, King
 from config import *
-
 
 class GameController:
     def __init__(self):
         self.board_manager = BoardManager(self._initialize_piece_on_board_setup)  # callback method in class signature
         self.move_factory = MoveFactory(self.board_manager)
+        self.white_king: King = self.board_manager.white_king
+        self.black_king: King = self.board_manager.black_king
 
-    def get_legal_moves(self, piece: ChessPiece) -> dict[MoveScope, set['Move']]:
+    def get_check_status(self, last_move: Move) -> CheckStatus:
         """
-        Updates the set of legal moves for this piece.
+        Returns the check status of the game.
+        """
+        moved_piece = last_move.piece
+        opponent_king_square = self.white_king.square if moved_piece.color is Color.BLACK else self.black_king.square
+
+        # Get the threatened squares of the moved piece
+        moved_piece_threatened_squares = self.get_threatened_squares(moved_piece)
+
+        if opponent_king_square in moved_piece_threatened_squares:
+            return CheckStatus.WHITE_UNDER_CHECK if moved_piece.color is Color.BLACK else CheckStatus.BLACK_UNDER_CHECK
+
+        return CheckStatus.NO_CHECK
+
+    def _get_moves(self, piece: ChessPiece, legal: bool) -> dict[MoveScope, set['Move']]:
+        """
+        TODO: write this
+
         Note: ChessPiece.legal_moves: dict[MoveScope, set['Move']]
         """
-        legal_moves: dict[MoveScope, set['Move']] = {MoveScope.STEP: set(), MoveScope.CAPTURE: set()}
 
         if piece is None:
             raise ValueError("'piece' must not be None.")
 
+        collected_moves: dict[MoveScope, set['Move']] = {MoveScope.STEP: set(), MoveScope.CAPTURE: set()}
+
         hypothetical_moves_final_positions = piece.get_hypothetical_moves_final_positions()
 
+        foo = self.move_factory.create if legal else self.move_factory.create_threatening_move
         for final_position in hypothetical_moves_final_positions:
-            move = self.move_factory.create(piece, final_position)
+            move = foo(piece, final_position)
 
             # None is returned when final position is not board-constrained
             if move is None or move.scope is MoveScope.INVALID:
                 continue
 
-            legal_moves[move.scope].add(move)
+            collected_moves[move.scope].add(move)
 
-        return legal_moves
+        return collected_moves
+
+    def get_legal_moves(self, piece: ChessPiece) -> dict[MoveScope, set['Move']]:
+        """
+        Returns the set of legal moves for this piece.
+        """
+        return self._get_moves(piece, legal=True)
+
+    def get_threatened_squares(self, piece: ChessPiece) -> set[Square]:
+        """
+        Returns the set of squares that are threatened by the specified color.
+        This is different from the legal moves as a piece might threaten a square without being able to move to it.
+        For example, when a piece is pinned.
+        """
+        threatening_moves = self._get_moves(piece, legal=False)
+        return {move.square_final for move_scope_set in threatening_moves.values() for move in move_scope_set}
 
     @staticmethod
     def _set_piece(piece: ChessPiece, square: Square):

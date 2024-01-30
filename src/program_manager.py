@@ -1,6 +1,6 @@
 # program_manager.py
 from game_manager import GameManager
-from config import PieceType, Color, GameStatus, BOARD_SIZE
+from config import *
 
 
 class ProgramManager:
@@ -48,3 +48,6 @@ class ProgramManager:
 
     def get_current_player(self) -> Color:
         return self._game_manager.current_player_color
+
+    def get_check_status(self) -> CheckStatus:
+        return self._game_manager.check_status
