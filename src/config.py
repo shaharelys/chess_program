@@ -11,15 +11,16 @@ class Color(Enum):
 
 
 class PieceType(Enum):
-    PAWN = ('P', 0)
-    KNIGHT = ('N', 1)
-    BISHOP = ('B', 2)
-    ROOK = ('R', 3)
-    QUEEN = ('Q', 4)
-    KING = ('K', 5)
+    PAWN = ('P.w', 'P.b️', 0)
+    KNIGHT = ('N.w', 'N.b', 1)
+    BISHOP = ('B.w', 'B.b', 2)
+    ROOK = ('R.w', 'R.b', 3)
+    QUEEN = ('Q.w', 'Q.b', 4)
+    KING = ('K.w', 'K.b', 5)
 
-    def __init__(self, symbol, order):
-        self.symbol = symbol
+    def __init__(self, white_symbol, black_symbol, order):
+        self.white_symbol = white_symbol
+        self.black_symbol = black_symbol
         self.order = order
 
 

@@ -44,10 +44,10 @@ class ChessGUI:
         print(f"\t-> Attempting move")
         try:
             self.api_manager.execute_move_by_position(start_position, end_position)
-            print("\t-> Attempt executed successfully.")
+            print("\t-> \033[92mAttempt executed successfully.\033[0m")
             self.update_graphic_board()  # Refresh the board
         except Exception as e:
-            print(f"\t-> Error executing move: {e}")
+            print(f"\t-> \033[91mError executing move: {e}\033[0m")
 
     """gui methods:"""
 
@@ -75,9 +75,7 @@ class ChessGUI:
         """
         if piece_type is None:
             return ''
-        type_str = piece_type.name[0]
-        color_suffix = '⬜' if piece_color == Color.WHITE else '⬛'
-        return type_str + color_suffix
+        return piece_type.white_symbol if piece_color == Color.WHITE else piece_type.black_symbol
 
     def run(self) -> None:
         for row in range(BOARD_SIZE):
