@@ -8,7 +8,7 @@ This game is still under development, focusing on implementing and refining the 
 
 ## Project Overview
 
-- **gui.py**: Provides a basic graphical user interface for testing using tkinter, enabling user interactions with the game through visual elements via `ApiManager`.
+- **gui.py**: Provides a basic graphical user interface for testing using tkinter, enabling user interactions with the game through visual elements via `APIManager`.
 
 - **api_manager.py**: Manages external API interactions, facilitating communication interface between the program and a client.
 
