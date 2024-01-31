@@ -2,8 +2,9 @@
 from board_manager import BoardManager, BoardSetup
 from square import Square
 from move import Move, MoveFactory
-from chess_piece import ChessPiece, King
+from chess_piece import ChessPiece, King, Pawn, ChessPieceFactory
 from config import *
+
 
 class GameController:
     def __init__(self):
@@ -16,7 +17,7 @@ class GameController:
         """
         Returns the check status of the game.
         """
-        moved_piece = last_move.piece
+        moved_piece = last_move.square_final.occupant
         opponent_king_square = self.white_king.square if moved_piece.color is Color.BLACK else self.black_king.square
 
         # Get the threatened squares of the moved piece
@@ -73,8 +74,11 @@ class GameController:
         """
         Place a piece on this square.
         """
-        assert piece.square is None, "Piece must be removed from its current square before being placed on another."
-        assert square.occupant is None, "Square must be void before placing a piece on it."
+        if piece.square is not None:
+            raise ValueError("Piece must be removed from its current square before being placed on another.")
+
+        if square.occupant is not None:
+            raise ValueError("Square must be void before placing a piece on it.")
 
         piece.square = square
         square.occupant = piece
@@ -110,6 +114,23 @@ class GameController:
         self._remove_piece(piece, square_i)
         self._set_piece(piece, square_f)
 
+    def _promote_pawn_to_chosen_piece(self, pawn: ChessPiece, choice=PieceType.QUEEN) -> None:
+        """
+        This method called when a pawn reaches the end of the board.
+        It replaces the pawn with the player's choice of piece.
+        For now the default choice is a queen.
+        """
+
+        new_piece = ChessPieceFactory.create(choice, pawn.color)
+        square = pawn.square
+        self._remove_piece(pawn, square)
+        self._set_piece(new_piece, square)
+
+        # Replace references
+        my_pieces = self.board_manager.white_pieces if pawn.color is Color.WHITE else self.board_manager.black_pieces
+        my_pieces.remove(pawn)
+        my_pieces.add(new_piece)
+
     def _initiate_capture_move(self, move: Move) -> None:
         """
         Initiates a capture move.
@@ -134,9 +155,18 @@ class GameController:
         else:
             raise ValueError(f"Invalid move scope: {move.scope}")
 
-    def initiate_move_and_related_methods(self, move: Move) -> None:
+    def initiate_move_and_related_methods(self, move: Move) -> HistoryTag:
         """
         initiates a move while supporting private related operations.
+        Returns the history tag of the move.
         """
         self._initiate_move(move)
-        # add related methods here
+        history_tag = HistoryTag.NORMAL
+        # check if a pawn reach the end of the board
+        if isinstance(move.piece, Pawn) and move.square_final.position[0] in (0, 7):
+            self._promote_pawn_to_chosen_piece(move.piece)
+            history_tag = HistoryTag.PROMOTION
+
+        # Add more related methods here
+
+        return history_tag

@@ -8,7 +8,6 @@ class Square:
         self.occupant: Optional['ChessPiece'] = None
         self.position = position
         self.color = self._get_square_color()
-        self.controlled_by: set['ChessPiece'] = set()
 
     def _get_square_color(self) -> Color:
         """

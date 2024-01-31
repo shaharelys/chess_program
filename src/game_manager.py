@@ -13,13 +13,13 @@ class GameManager:
     def __init__(self):
         self.controller = GameController()
         self.board_manager = self.controller.board_manager
-        self.history: list[Move] = []
+        self.history: list[tuple[Move, HistoryTag]] = []
         self.current_player_color = Color.WHITE
         self.piece_type_board_state = None
         self._update_piece_type_board_state()
+        self.check_status: CheckStatus = CheckStatus.NO_CHECK
         self.white_king: King = self.board_manager.white_king
         self.black_king: King = self.board_manager.black_king
-        self.check_status: CheckStatus = CheckStatus.NO_CHECK
 
     def _update_check_status(self, move: Move) -> None:
         """
@@ -27,11 +27,11 @@ class GameManager:
         """
         self.check_status = self.controller.get_check_status(move)
 
-    def _update_history(self, move: Move) -> None:
+    def _update_history(self, move: Move, tag: HistoryTag) -> None:
         """
         Updates the history of moves.
         """
-        self.history.append(move)
+        self.history.append((move, tag))
 
     def _update_current_player(self) -> None:
         """
@@ -39,11 +39,11 @@ class GameManager:
         """
         self.current_player_color = Color.WHITE if self.current_player_color == Color.BLACK else Color.BLACK
 
-    def _update_on_move(self, move: Move) -> None:
+    def _update_on_move(self, move: Move, history_tag: HistoryTag) -> None:
         """
         Updates the game state after a move has been made.
         """
-        self._update_history(move)
+        self._update_history(move, history_tag)
         self._update_current_player()
         self._update_piece_type_board_state()
         self._update_check_status(move)
@@ -93,8 +93,8 @@ class GameManager:
         Executes a move.
         """
         self._validate_on_move(move)
-        self.controller.initiate_move_and_related_methods(move)
-        self._update_on_move(move)
+        history_tag = self.controller.initiate_move_and_related_methods(move)
+        self._update_on_move(move, history_tag)
 
     def get_game_status(self) -> GameStatus:
         """

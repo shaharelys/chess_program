@@ -24,6 +24,16 @@ class PieceType(Enum):
         self.order = order
 
 
+class HistoryTag(Enum):
+    """
+    Enum representing different types of history tags.
+    """
+    NORMAL = 0
+    CASTLE = 1
+    EN_PASSANT = 2
+    PROMOTION = 3
+
+
 class InitPiece(Enum):
     """
     Enum representing the initial information of a chess piece
